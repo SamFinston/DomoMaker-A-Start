@@ -1,103 +1,126 @@
 "use strict";
 
-var handleDomo = function handleDomo(e) {
+var handleLogin = function handleLogin(e) {
     e.preventDefault();
 
     $("#domoMessage").animate({ width: 'hide' }, 350);
 
-    if ($("#domoName").val() == '' || $("#domoAge").val() == '') {
-        handleError("RAWR! All fields are required");
+    if ($("#user").val() == '' || $("#pass").val() == '') {
+        handleError("RAWR! Username or password is empty");
         return false;
     }
 
-    sendAjax('POST', $("#domoForm").attr("action"), $("#domoForm").serialize(), function () {
-        loadDomosFromServer();
-    });
+    console.log($("input[name=_csrf]").val());
+
+    sendAjax('POST', $("#loginForm").attr("action"), $("#loginForm").serialize(), redirect);
 
     return false;
 };
 
-var DomoForm = function DomoForm(props) {
+var handleSignup = function handleSignup(e) {
+    e.preventDefault();
+
+    $("#domoMessage").animate({ width: 'hide' }, 350);
+
+    if ($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
+        handleError("RAWR! All fields are required");
+        return false;
+    }
+
+    if ($("#pass").val() !== $("#pass2").val()) {
+        handleError("RAWR! Passwords do not match");
+        return false;
+    }
+
+    sendAjax('POST', $("#signupForm").attr("action"), $("#signupForm").serialize(), redirect);
+
+    return false;
+};
+
+var LoginWindow = function LoginWindow(props) {
     return React.createElement(
         "form",
-        { id: "domoForm",
-            onSubmit: handleDomo,
-            name: "domoForm",
-            action: "/maker",
+        { id: "loginForm", name: "loginForm",
+            onSubmit: handleLogin,
+            action: "/login",
             method: "POST",
-            className: "domoForm"
+            className: "mainForm"
         },
         React.createElement(
             "label",
-            { htmlFor: "name" },
-            "Name: "
+            { htmlFor: "username" },
+            "Username: "
         ),
-        React.createElement("input", { id: "domoName", type: "text", name: "name", placeholder: "Domo Name" }),
+        React.createElement("input", { id: "user", type: "text", name: "username", placeholder: "username" }),
         React.createElement(
             "label",
-            { htmlFor: "age" },
-            "Age: "
+            { htmlFor: "pass" },
+            "Password: "
         ),
-        React.createElement("input", { id: "domoAge", type: "text", name: "age", placeholder: "Domo Age" }),
+        React.createElement("input", { id: "pass", type: "password", name: "pass", placeholder: "password" }),
         React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
-        React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Make Domo" })
+        React.createElement("input", { className: "formSubmit", type: "submit", value: "Sign in" })
     );
 };
 
-var DomoList = function DomoList(props) {
-    if (props.domos.length === 0) {
-        return React.createElement(
-            "div",
-            { className: "domoList" },
-            React.createElement(
-                "h3",
-                { className: "emptyDomo" },
-                "No Domos yet"
-            )
-        );
-    }
-
-    var domoNodes = props.domos.map(function (domo) {
-        return React.createElement(
-            "div",
-            { key: domo._id, className: "domo" },
-            React.createElement("img", { src: "/assets/img/domoFace.jpeg", alt: "domo face", className: "domoFace" }),
-            React.createElement(
-                "h3",
-                { className: "domoName" },
-                " Name: ",
-                domo.name,
-                " "
-            ),
-            React.createElement(
-                "h3",
-                { className: "domoAge" },
-                " Age: ",
-                domo.age,
-                " "
-            )
-        );
-    });
-
+var SignupWindow = function SignupWindow(props) {
     return React.createElement(
-        "div",
-        { className: "domoList" },
-        domoNodes
+        "form",
+        { id: "signupForm",
+            name: "signupForm",
+            onSubmit: handleSignup,
+            action: "/signup",
+            method: "POST",
+            className: "mainForm"
+        },
+        React.createElement(
+            "label",
+            { htmlFor: "username" },
+            "Username: "
+        ),
+        React.createElement("input", { id: "user", type: "text", name: "username", placeholder: "username" }),
+        React.createElement(
+            "label",
+            { htmlFor: "pass" },
+            "Password: "
+        ),
+        React.createElement("input", { id: "pass", type: "password", name: "pass", placeholder: "password" }),
+        React.createElement(
+            "label",
+            { htmlFor: "pass2" },
+            "Password: "
+        ),
+        React.createElement("input", { id: "pass2", type: "password", name: "pass2", placeholder: "retype password" }),
+        React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
+        React.createElement("input", { className: "formSubmit", type: "submit", value: "Sign up" })
     );
 };
 
-var loadDomosFromServer = function loadDomosFromServer() {
-    sendAjax('GET', '/getDomos', null, function (data) {
-        ReactDOM.render(React.createElement(DomoList, { domos: data.domos }), document.querySelector("#domos"));
-    });
+var createLoginWindow = function createLoginWindow(csrf) {
+    ReactDOM.render(React.createElement(LoginWindow, { csrf: csrf }), document.querySelector("#content"));
+};
+
+var createSignupWindow = function createSignupWindow(csrf) {
+    ReactDOM.render(React.createElement(SignupWindow, { csrf: csrf }), document.querySelector("#content"));
 };
 
 var setup = function setup(csrf) {
-    ReactDOM.render(React.createElement(DomoForm, { csrf: csrf }), document.querySelector("#makeDomo"));
+    var loginButton = document.querySelector("#loginButton");
+    var signupButton = document.querySelector("#signupButton");
 
-    ReactDOM.render(React.createElement(DomoList, { domos: [] }), document.querySelector("#domos"));
+    signupButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        createSignupWindow(csrf);
+        return false;
+    });
 
-    loadDomosFromServer();
+    loginButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        createLoginWindow(csrf);
+        return false;
+    });
+
+    createLoginWindow(csrf); //default view
 };
 
 var getToken = function getToken() {
