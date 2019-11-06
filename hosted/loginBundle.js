@@ -32,8 +32,6 @@ var handleSignup = function handleSignup(e) {
         return false;
     }
 
-    console.log($("input[name=_csrf]").val());
-
     sendAjax('POST', $("#signupForm").attr("action"), $("#signupForm").serialize(), redirect);
 
     return false;
@@ -113,6 +111,12 @@ var setup = function setup(csrf) {
     signupButton.addEventListener("click", function (e) {
         e.preventDefault();
         createSignupWindow(csrf);
+        return false;
+    });
+
+    loginButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        createLoginWindow(csrf);
         return false;
     });
 
